@@ -40,7 +40,10 @@ func fanOut[T any](ctx context.Context, wg *sync.WaitGroup, src <-chan T, dsts .
 		select {
 		case <-ctx.Done():
 			return
-		case val := <-src:
+		case val, ok := <-src:
+			if !ok {
+				return
+			}
 			for _, dst := range dsts {
 				select {
 				case dst <- val:
