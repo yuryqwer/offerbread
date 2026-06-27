@@ -2,15 +2,19 @@ package pipeline
 
 import (
 	"context"
+	"offerbread/internal/asr"
+	"offerbread/internal/audio"
+	"offerbread/internal/extractor"
+	"offerbread/internal/generator"
 	"sync"
 )
 
 type InterviewPipeline struct {
 	// 模块实例（接口）
-	audio     AudioCapturer
-	asr       ASRService
-	extractor QuestionExtractor
-	generator AnswerGenerator
+	audio     audio.AudioCapturer
+	asr       asr.ASRService
+	extractor extractor.QuestionExtractor
+	generator generator.AnswerGenerator
 
 	// 模块直连 channel 以及扇出 channel
 	audioRawCh chan []byte // 音频采集产出
@@ -33,33 +37,11 @@ type InterviewPipeline struct {
 	wg     sync.WaitGroup
 }
 
-// fanOut 将 src 中的值复制到所有的 dsts 中
-func fanOut[T any](ctx context.Context, wg *sync.WaitGroup, src <-chan T, dsts ...chan<- T) {
-	defer wg.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case val, ok := <-src:
-			if !ok {
-				return
-			}
-			for _, dst := range dsts {
-				select {
-				case dst <- val:
-				case <-ctx.Done():
-					return
-				}
-			}
-		}
-	}
-}
-
 func NewInterviewPipeline(
-	audio AudioCapturer,
-	asr ASRService,
-	extractor QuestionExtractor,
-	generator AnswerGenerator,
+	audio audio.AudioCapturer,
+	asr asr.ASRService,
+	extractor extractor.QuestionExtractor,
+	generator generator.AnswerGenerator,
 ) *InterviewPipeline {
 	p := &InterviewPipeline{
 		audio:     audio,
