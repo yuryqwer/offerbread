@@ -1,8 +1,11 @@
 module offerbread
 
-go 1.23.0
+go 1.25
 
-require github.com/wailsapp/wails/v2 v2.12.0
+require (
+	github.com/wailsapp/wails/v2 v2.12.0
+	go2tv.app/screencast v0.0.0-20260415182719-6f13c7343d9c
+)
 
 require (
 	git.sr.ht/~jackmordaunt/go-toast/v2 v2.0.3 // indirect
