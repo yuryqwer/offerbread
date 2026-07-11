@@ -84,7 +84,10 @@ func (p *InterviewPipeline) Start() error {
 
 	// 多播: audioRawCh → audioCh + audioUICh
 	p.wg.Add(1)
-	go fanOut(p.ctx, &p.wg, p.audioRawCh, p.audioCh, p.audioUICh)
+	go func() {
+		defer p.wg.Done()
+		fanOut(p.ctx, p.audioRawCh, p.audioCh, p.audioUICh)
+	}()
 
 	// ASR: audioCh -> textRawCh
 	p.wg.Add(1)
@@ -97,7 +100,10 @@ func (p *InterviewPipeline) Start() error {
 
 	// 多播: textRawCh → textCh + textUICh
 	p.wg.Add(1)
-	go fanOut(p.ctx, &p.wg, p.textRawCh, p.textCh, p.textUICh)
+	go func() {
+		defer p.wg.Done()
+		fanOut(p.ctx, p.textRawCh, p.textCh, p.textUICh)
+	}()
 
 	// 问题提取: textCh -> questionRawCh
 	p.wg.Add(1)
@@ -110,7 +116,10 @@ func (p *InterviewPipeline) Start() error {
 
 	// 多播: questionRawCh → questionCh + questionUICh
 	p.wg.Add(1)
-	go fanOut(p.ctx, &p.wg, p.questionRawCh, p.questionCh, p.questionUICh)
+	go func() {
+		defer p.wg.Done()
+		fanOut(p.ctx, p.questionRawCh, p.questionCh, p.questionUICh)
+	}()
 
 	// 答案生成: textCh -> questionRawCh
 	p.wg.Add(1)

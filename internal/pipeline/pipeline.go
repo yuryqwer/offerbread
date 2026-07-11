@@ -11,8 +11,7 @@ type Pipeline interface {
 }
 
 // fanOut 将 src channel 中的值复制到所有的 dsts channel 中
-func fanOut[T any](ctx context.Context, wg *sync.WaitGroup, src <-chan T, dsts ...chan<- T) {
-	defer wg.Done()
+func fanOut[T any](ctx context.Context, src <-chan T, dsts ...chan<- T) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -21,13 +20,19 @@ func fanOut[T any](ctx context.Context, wg *sync.WaitGroup, src <-chan T, dsts .
 			if !ok {
 				return
 			}
+			var wg sync.WaitGroup
+			wg.Add(len(dsts))
 			for _, dst := range dsts {
-				select {
-				case dst <- val:
-				case <-ctx.Done():
-					return
-				}
+				go func(dst chan<- T) {
+					defer wg.Done()
+					select {
+					case dst <- val:
+					case <-ctx.Done():
+						return
+					}
+				}(dst)
 			}
+			wg.Wait()
 		}
 	}
 }
