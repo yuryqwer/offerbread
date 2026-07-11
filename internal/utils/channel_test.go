@@ -1,19 +1,17 @@
-package pipeline
+package utils
 
 import (
-	"context"
 	"testing"
 )
 
 func TestFanOut(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	src := make(chan int)
 	dst1 := make(chan int)
 	dst2 := make(chan int)
 
-	go fanOut(ctx, src, dst1, dst2)
+	go FanOut(ctx, src, dst1, dst2)
 
 	go func() {
 		for i := range 5 {

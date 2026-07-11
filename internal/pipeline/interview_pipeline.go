@@ -6,6 +6,7 @@ import (
 	"offerbread/internal/audio"
 	"offerbread/internal/extractor"
 	"offerbread/internal/generator"
+	"offerbread/internal/utils"
 	"sync"
 )
 
@@ -86,7 +87,7 @@ func (p *InterviewPipeline) Start() error {
 	p.wg.Add(1)
 	go func() {
 		defer p.wg.Done()
-		fanOut(p.ctx, p.audioRawCh, p.audioCh, p.audioUICh)
+		utils.FanOut(p.ctx, p.audioRawCh, p.audioCh, p.audioUICh)
 	}()
 
 	// ASR: audioCh -> textRawCh
@@ -102,7 +103,7 @@ func (p *InterviewPipeline) Start() error {
 	p.wg.Add(1)
 	go func() {
 		defer p.wg.Done()
-		fanOut(p.ctx, p.textRawCh, p.textCh, p.textUICh)
+		utils.FanOut(p.ctx, p.textRawCh, p.textCh, p.textUICh)
 	}()
 
 	// 问题提取: textCh -> questionRawCh
@@ -118,7 +119,7 @@ func (p *InterviewPipeline) Start() error {
 	p.wg.Add(1)
 	go func() {
 		defer p.wg.Done()
-		fanOut(p.ctx, p.questionRawCh, p.questionCh, p.questionUICh)
+		utils.FanOut(p.ctx, p.questionRawCh, p.questionCh, p.questionUICh)
 	}()
 
 	// 答案生成: textCh -> questionRawCh
