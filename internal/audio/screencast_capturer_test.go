@@ -27,8 +27,9 @@ func TestScreencastCapturer(t *testing.T) {
 	defer file.Close()
 
 	// 先写入 WAV 文件头（44 字节，占位，等录制完成后更新长度字段）
-	sampleRate := 48000
-	numChannels := 2
+	// 重采样后输出为 16kHz 单声道
+	sampleRate := 16000
+	numChannels := 1
 	bitsPerSample := 16
 	dataSize := 0
 

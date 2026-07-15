@@ -10,14 +10,17 @@ import (
 
 // ScreencastCapturer 基于 go2tv.app/screencast 的音频采集实现
 type ScreencastCapturer struct {
-	stream  *capture.Stream
-	running bool
-	mu      sync.Mutex
+	stream    *capture.Stream
+	running   bool
+	mu        sync.Mutex
+	resampler *PCMResampler // 48kHz stereo → 16kHz mono
 }
 
 // NewScreencastCapturer 创建一个新的音频采集器
 func NewScreencastCapturer() *ScreencastCapturer {
-	return &ScreencastCapturer{}
+	return &ScreencastCapturer{
+		resampler: NewPCMResampler(),
+	}
 }
 
 func (s *ScreencastCapturer) Capture(ctx context.Context, out chan<- []byte) error {
@@ -42,6 +45,7 @@ func (s *ScreencastCapturer) Capture(ctx context.Context, out chan<- []byte) err
 
 	s.stream = stream
 	s.running = true
+	s.resampler.Reset() // 清除上次采集的 FIR 状态
 
 	go func() {
 		defer func() {
@@ -73,8 +77,13 @@ func (s *ScreencastCapturer) readLoop(ctx context.Context, out chan<- []byte) {
 				continue
 			}
 
+			resampled := s.resampler.Process(buf[:n])
+			if len(resampled) == 0 {
+				continue
+			}
+
 			select {
-			case out <- buf[:n]: // 直接输出原始数据
+			case out <- resampled:
 			case <-ctx.Done():
 				return
 			}
